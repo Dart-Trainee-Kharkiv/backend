@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 flask = "*"
 marshmallow = "*"
+pillow = "*"
+numpy = "*"
 
 [requires]
 python_version = "3.8"
