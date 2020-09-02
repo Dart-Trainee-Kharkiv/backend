@@ -9,8 +9,8 @@ import codecs
 # creating the Flask application
 app = Flask(__name__)
 
-# http get request for /
-@app.route('/')
+# http get request for /img
+@app.route('/img')
 def get_img():
 
     # encode image as a base64 string
@@ -22,15 +22,16 @@ def get_img():
 
     # dumping image string and size in json
     return jsonify(size=pilImg.size,
-                   image=b64s.decode('utf-8'))
+                   img=b64s.decode('utf-8'))
 
-# http post request for /
-@app.route('/', methods=['POST'])
+# http post request for /img
+@app.route('/img', methods=['POST'])
 def post_img():
+
     # mount image object
     j = request.get_json()
     _size = j['size']
-    s = j['image']
+    s = j['img']
 
     # encoding json into bytes
     s_bytes = s.encode()
