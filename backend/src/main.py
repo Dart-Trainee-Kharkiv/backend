@@ -14,7 +14,7 @@ app = Flask(__name__)
 def get_img():
 
     # encode image as a base64 string
-    with open("test_movie/test1.jpeg", "rb") as img:
+    with open("test_movie/test_movie.001.jpeg", "rb") as img:
         b64s = base64.b64encode(img.read())
 
     f = io.BytesIO(base64.b64decode(b64s))
@@ -23,6 +23,7 @@ def get_img():
     # dumping image string and size in json
     return jsonify(size=pilImg.size,
                    image=b64s.decode('utf-8'))
+
 
 # http post request for /
 @app.route('/', methods=['POST'])
@@ -41,3 +42,6 @@ def post_img():
 
     # return image string
     return str(s), 201
+    
+if __name__ == '__main__':
+    app.run(debug=True)
