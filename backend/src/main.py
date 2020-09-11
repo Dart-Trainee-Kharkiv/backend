@@ -5,6 +5,8 @@ import io
 import json
 import base64
 import codecs
+#our vehicle recognition mode
+from .vehicle_recognition.main import VehicleRecognition
 
 # creating the Flask application
 app = Flask(__name__)
@@ -22,7 +24,7 @@ def get_img():
 
     # dumping image string and size in json
     return jsonify(size=pilImg.size,
-                   img=b64s.decode('utf-8'))
+                   image=b64s.decode('utf-8'))
 
 # http post request for /img
 @app.route('/img', methods=['POST'])
@@ -38,7 +40,11 @@ def post_img():
 
     # show transfered image
     f = io.BytesIO(base64.b64decode(s_bytes))
-    pilimage = Image.open(f).show()
+
+    pil_img = Image.open(f).convert('RGB')
+
+    vr = VehicleRecognition(pil_img)
+    vehicles = vr.DetectVehicles()
 
     # return image string
-    return str(s), 201
+    return jsonify(vehicles=vehicles), 201

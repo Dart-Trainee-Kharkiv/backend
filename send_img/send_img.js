@@ -1,69 +1,78 @@
-const url = 'http://127.0.0.1:4040';
+//url of a our API
+//const url = 'http://speedest.herokuapp.com';
+const url = 'http://0.0.0.0:5000/';
+//image element I've put on our view that will later display our result
+const canv = document.getElementById('test_canvas');
+const ctx = canv.getContext("2d");
+//a timer that will help us measure apps performance
+var timer; var mlsec = 0;
 
-const canv = document.getElementById('canv');
-const ctx = canv.getContext('2d');
-
-const img1 = document.getElementById('img1');
-const img2 = document.getElementById('img2');
-const img3 = document.getElementById('img3');
-const img4 = document.getElementById('img4');
-const img5 = document.getElementById('img5');
-var imgs = [img1,img2,img3,img4,img5];
-
-ctx.font = '20px monospace'; ctx.fillStyle = '#5F6367';
-ctx.fillText('Test', 20, 130);
-
-show_img();
-get_img();
-
-function waitFPS(frames_per_second) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(frames_per_second);
-    }, 1000/frames_per_second);
-  });
-  //setTimeout(() =>{return 0;}, 1000/frames_per_second);
+//function that gets triggered once the user decides to upload an image
+function show_img(upload) {
+  //timer starts
+  timer = setInterval(()=> mlsec++, 1);
+  //getting this img as a file
+  let img_file = upload.files[0];
+  //converting it to a bytes array with base64 encoding
+  to_base64(img_file);
 }
 
-async function show_img() {
-  let i = 0;
-  while (true) {
-    if (i > 4){i = 0;}
+//function that converts our img file to base64 bytes
+async function to_base64(img_file) {
+    //FileReader that will help us convert our image file
+    var reader = new FileReader();
 
-    var x = await waitFPS(5);
-    //post_img(imgs[i]);
-    ctx.drawImage(imgs[i], 0,0, canv.width, canv.height );
-
-    i++
-  }
+    //function that will be triggered once the conversion is done
+    reader.onloadend = function() {
+      //removing the header from byte image as the server don't accept them and it shortens the json a bit
+      //PS this is not ideal since images might be JPEG
+      var b64_img = reader.result.replace("data:image/jpeg;base64,", "");
+      //displaing how much time it took
+      console.log("converting to base64 took: " + mlsec); mlsec = 0;
+      //sending the result to the server
+      post_img(b64_img);
+    }
+    //converting our img file
+    reader.readAsDataURL(img_file);
 }
 
-function post_img(img){
+//function that posts converted images to the server, gets the result and display it in the view
+function post_img(b64_img){
+  //creating an AJAX request
   var xhr = new XMLHttpRequest();
   xhr.open('POST', url + '/img', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
-  //xhr.onreadystatechange = function () {
-  //    if (xhr.readyState === 4 && xhr.status === 200) {
-  //        var json = JSON.parse(xhr.responseText);
-  //        console.log(json.email + ", " + json.password);
-  //    }
-  //};
-  var data = JSON.stringify({'img': img, 'size': img.size});
-  xhr.send(data);
-}
 
-function get_img(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url + '/img', true);
+  //function that will be triggered once the request will be filled
+  xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 201) {
+        //displaing how much time it took
+        console.log("sending request took: " + mlsec); mlsec = 0; clearInterval(timer);
 
-  xhr.onload = function () {
-    // Request finished. Do processing here.
-    print(xhr.responseText);
+        console.log(xhr.responseText);
+
+        let vehicles = JSON.parse(xhr.responseText).vehicles
+
+        //displaying an img that was received and sent back by the server
+        //again, not ideal, might not be JPEG
+        var image = new Image();
+        image.onload = function() {
+          ctx.drawImage(image, 0, 0, canv.width, canv.height);
+
+          for (let i = 0 ; i < vehicles.length; i++){
+            let vehicle = vehicles[i];
+            ctx.beginPath();
+            ctx.lineWidth = "3";
+            ctx.strokeStyle = "red";
+            ctx.rect(vehicle[0], vehicle[1], vehicle[2], vehicle[3]);
+            ctx.stroke();
+          }
+        };
+        image.src = "data:image/jpeg;base64," + b64_img;
+      }
   };
-
-  xhr.send(null);
-  // xhr.send('string');
-  // xhr.send(new Blob());
-  // xhr.send(new Int8Array());
-  // xhr.send(document);
+  //serializing our img data
+  var data = JSON.stringify({'img': b64_img, 'size': "12,12"});
+  //sending request
+  xhr.send(data);
 }
