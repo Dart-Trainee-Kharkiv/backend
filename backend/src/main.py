@@ -5,7 +5,7 @@ import json
 import base64
 import codecs
 #our vehicle recognition mode
-from .vehicle_recognition.main import VehicleRecognition
+from .vehicle_recognition.vhcl_rec import VehicleRecognition
 
 #creating the Flask application
 app = Flask(__name__)
@@ -15,7 +15,7 @@ app = Flask(__name__)
 def get_img():
 
     #encode image as a base64 string
-    with open("test1.jpeg", "rb") as img:
+    with open("./src/test1.jpeg", "rb") as img:
         b64s = base64.b64encode(img.read())
 
     f = io.BytesIO(base64.b64decode(b64s))

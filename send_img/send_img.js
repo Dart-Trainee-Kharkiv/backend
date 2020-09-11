@@ -72,7 +72,7 @@ function post_img(b64_img){
       }
   };
   //serializing our img data
-  var data = JSON.stringify({'img': b64_img, 'size': "12,12"});
+  var data = JSON.stringify({'image': b64_img, 'size': "12,12"});
   //sending request
   xhr.send(data);
 }

@@ -3,7 +3,7 @@ import numpy as np
 
 class VehicleRecognition(object):
 
-    def __init__(self, pil_img = None, names_object="obj.names", weights_file="./weights/yolov3-tiny_last_now.weights", config_file="./weights/yolov3-tiny_last_cfg.cfg"):#names_object="/Users/illia/speed_est/backend/src/vehicle_recognition/obj.names", weights_file="/Users/illia/speed_est/backend/src/vehicle_recognition/weights/yolov3-tiny_last_now.weights", config_file="/Users/illia/speed_est/backend/src/vehicle_recognition/weights/yolov3-tiny_last_cfg.cfg"): 
+    def __init__(self, pil_img = None, names_object="./src/vehicle_recognition/obj.names", weights_file="./src/vehicle_recognition/weights/yolov3-tiny_last_now.weights", config_file="./src/vehicle_recognition/weights/yolov3-tiny_last_cfg.cfg"):#names_object="/Users/illia/speed_est/backend/src/vehicle_recognition/obj.names", weights_file="/Users/illia/speed_est/backend/src/vehicle_recognition/weights/yolov3-tiny_last_now.weights", config_file="/Users/illia/speed_est/backend/src/vehicle_recognition/weights/yolov3-tiny_last_cfg.cfg"):
 
         #fieldds
         self.__weights = weights_file
@@ -28,7 +28,7 @@ class VehicleRecognition(object):
         if self.pil_img != None:
             #array with vehicles locations on the frame
             vehicles = []
-            print(self.__weights, self.__config)
+            
             #load YOLO pretrained weights and config file
             net = cv2.dnn.readNet(self.__weights, self.__config)
 
