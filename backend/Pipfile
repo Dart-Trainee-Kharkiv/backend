@@ -10,6 +10,8 @@ flask = "*"
 marshmallow = "*"
 pillow = "*"
 numpy = "*"
+gunicorn = "*"
+opencv-python-headless = "*"
 
 [requires]
 python_version = "3.8"

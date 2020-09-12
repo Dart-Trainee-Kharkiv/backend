@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Image test</title>
+    <style>
+      canvas {width:1000px;}
+      #bd {text-align: center; }
+      * {margin: 10px;}
+      input {margin: 10px 0px;}
+    </style>
+  </head>
+  <body>
+    <div id ='bd'>
+        <h1>Test 1</h1>
+        <input type='file' id="upload" onchange="show_img(this)">
+        <canvas id="test_canvas" width=1920 height=1080></canvas>
+        <script type="text/javascript" src="send_img.js">
+        </script>
+    </div>
+  </body>
+</html>
