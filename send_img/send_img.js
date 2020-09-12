@@ -15,6 +15,7 @@ function show_img(upload) {
   //getting this img as a file
   let img_file = upload.files[0];
   //converting it to a bytes array with base64 encoding
+  console.log(typeof img_file);
   to_base64(img_file);
 }
 
@@ -69,6 +70,7 @@ function post_img(b64_img){
             ctx.stroke();
           }
         };
+        console.log("data:image/jpeg;base64," + b64_img);
         image.src = "data:image/jpeg;base64," + b64_img;
       }
   };
