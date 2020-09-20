@@ -1,17 +1,20 @@
 import cv2
 import numpy as np
+import random
 
 class VehicleRecognition(object):
 
     def __init__(self, pil_img = None, names_object="./src/vehicle_recognition/obj.names", weights_file="./src/vehicle_recognition/weights/yolov3-tiny_last_now.weights", config_file="./src/vehicle_recognition/weights/yolov3-tiny_last_cfg.cfg"):#names_object="/Users/illia/speed_est/backend/src/vehicle_recognition/obj.names", weights_file="/Users/illia/speed_est/backend/src/vehicle_recognition/weights/yolov3-tiny_last_now.weights", config_file="/Users/illia/speed_est/backend/src/vehicle_recognition/weights/yolov3-tiny_last_cfg.cfg"):
 
-        #fieldds
+        #fields
         self.__weights = weights_file
         self.__config = config_file
         self.__names = names_object
 
         #image that will be analyzed
         self.pil_img = pil_img
+        
+        self.bboxes = None 
 
     #image source property
     @property
@@ -24,6 +27,7 @@ class VehicleRecognition(object):
 
     #returns vehicles location on the image
     def DetectVehicles(self, min_conf = 0.2):
+    
         #if the image have been provided
         if self.pil_img != None:
             #array with vehicles locations on the frame
@@ -50,6 +54,7 @@ class VehicleRecognition(object):
             blob = cv2.dnn.blobFromImage(img, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
             net.setInput(blob)
             outs = net.forward(outputlayers)
+            self.bboxes = outs
 
             #return vehicles location based on confidence level
             for out in outs:
@@ -79,3 +84,30 @@ class VehicleRecognition(object):
 
             return vehicles
         return None
+    
+    def TrackVehicles(self, vehicles, frames):
+         tracker = cv2.TrackerKCF_create()
+         bboxes = vehicles
+         colors = []
+         trackerType = "KCF"
+         multiTracker = cv2.MultiTracker_create()
+         
+         for bbox in self.bboxes:
+            #print(bbox) // need a tuple (xmin,ymin,boxwidth,boxheight)
+            colors.append((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
+            multiTracker.add(cv2.TrackerKCF_create(), np.float32(frames[0]), bbox)
+         
+         for frame in frames:
+            self.pil_img = frame
+            success, boxes = multiTracker.update(self.DetectVehicles())
+            
+            for i, newbox in enumerate(boxes):
+               p1 = (int(newbox[0]), int(newbox[1]))
+               p2 = (int(newbox[0] + newbox[2]), int(newbox[1] + newbox[3]))
+               cv2.rectangle(frame, p1, p2, colors[i], 2, 1)
+             
+         cv2.imshow('MultiTracker', frame)
+
+
+         return 'chek'
+
