@@ -54,7 +54,7 @@ class VehicleRecognition(object):
             blob = cv2.dnn.blobFromImage(img, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
             net.setInput(blob)
             outs = net.forward(outputlayers)
-            self.bboxes = outs
+            self.bboxes = []
 
             #return vehicles location based on confidence level
             for out in outs:
@@ -80,8 +80,9 @@ class VehicleRecognition(object):
                         y = int(center_y - h / 2)
 
                         #saving found vehicle locations
+                        self.bboxes.append(tuple([x,y,w,h]))
                         vehicles.append([x, y, w, h])
-
+            print(self.bboxes)
             return vehicles
         return None
     
@@ -93,20 +94,22 @@ class VehicleRecognition(object):
          multiTracker = cv2.MultiTracker_create()
          
          for bbox in self.bboxes:
-            #print(bbox) // need a tuple (xmin,ymin,boxwidth,boxheight)
             colors.append((random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)))
             multiTracker.add(cv2.TrackerKCF_create(), np.float32(frames[0]), bbox)
          
          for frame in frames:
             self.pil_img = frame
-            success, boxes = multiTracker.update(self.DetectVehicles())
+            self.DetectVehicles()
+            success, boxes = multiTracker.update(np.float32(frame))
             
             for i, newbox in enumerate(boxes):
                p1 = (int(newbox[0]), int(newbox[1]))
                p2 = (int(newbox[0] + newbox[2]), int(newbox[1] + newbox[3]))
-               cv2.rectangle(frame, p1, p2, colors[i], 2, 1)
+               cv2.rectangle(np.float32(frame), p1, p2, colors[i], 2, 1)
+            #cv2.imwrite("track.jpg", frame) 
              
-         cv2.imshow('MultiTracker', frame)
+         cv2.imshow('MultiTracker', np.float32(frame))
+         input()
 
 
          return 'chek'
