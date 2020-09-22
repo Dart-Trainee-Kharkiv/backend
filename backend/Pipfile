@@ -11,7 +11,7 @@ marshmallow = "*"
 pillow = "*"
 numpy = "*"
 gunicorn = "*"
-opencv-python-headless = "*"
+opencv-contrib-python = "*"
 
 [requires]
 python_version = "3.8"
