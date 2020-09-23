@@ -72,11 +72,12 @@ def post_frames():
       
     #detecting vehicles on the img
     vr = VehicleRecognition(pil_imgs[0])
-    vehicles = vr.DetectVehicles()
-    vehiclesTrack = vr.TrackVehicles(tuple(vehicles), pil_imgs)
+    vr.DetectVehicles()
+    vehiclesTrack = vr.TrackVehicles(pil_imgs)
+    print(vehiclesTrack)
     
     #return array with vehicles
-    return jsonify(vehicles=vehicles), 201
+    return jsonify(vehiclesTrack=vehiclesTrack), 201
     
 if __name__ == '__main__':
     app.run(debug=True)
