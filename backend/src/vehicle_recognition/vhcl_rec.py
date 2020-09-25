@@ -1,17 +1,27 @@
-import cv2
+from __future__ import print_function
 import numpy as np
+import sys
+import cv2
+import random
+import os
+import json
+from random import randint
 
 class VehicleRecognition(object):
 
     def __init__(self, pil_img = None, names_object="./src/vehicle_recognition/obj.names", weights_file="./src/vehicle_recognition/weights/yolov3-tiny_last_now.weights", config_file="./src/vehicle_recognition/weights/yolov3-tiny_last_cfg.cfg"):#names_object="/Users/illia/speed_est/backend/src/vehicle_recognition/obj.names", weights_file="/Users/illia/speed_est/backend/src/vehicle_recognition/weights/yolov3-tiny_last_now.weights", config_file="/Users/illia/speed_est/backend/src/vehicle_recognition/weights/yolov3-tiny_last_cfg.cfg"):
 
-        #fieldds
+
+        #fields
         self.__weights = weights_file
         self.__config = config_file
         self.__names = names_object
 
         #image that will be analyzed
         self.pil_img = pil_img
+        
+        #bound boxes
+        self.bboxes = None 
 
     #image source property
     @property
@@ -24,6 +34,7 @@ class VehicleRecognition(object):
 
     #returns vehicles location on the image
     def DetectVehicles(self, min_conf = 0.2):
+
         #if the image have been provided
         if self.pil_img != None:
             #array with vehicles locations on the frame
@@ -51,6 +62,8 @@ class VehicleRecognition(object):
             net.setInput(blob)
             outs = net.forward(outputlayers)
 
+            self.bboxes = []
+
             #return vehicles location based on confidence level
             for out in outs:
                 for detection in out:
@@ -75,7 +88,66 @@ class VehicleRecognition(object):
                         y = int(center_y - h / 2)
 
                         #saving found vehicle locations
+
+                        self.bboxes.append(tuple([x,y,w,h]))
                         vehicles.append([x, y, w, h])
 
             return vehicles
         return None
+    
+    def TrackVehicles(self, pil_imgs):
+ 
+      # Read first frame
+      frame = cv2.cvtColor(np.array(self.pil_img), cv2.COLOR_RGB2BGR)
+      
+
+      ## Select boxes
+      bboxes = []
+      colors = [] 
+  
+      bboxes = self.bboxes;
+      
+      for bbox in bboxes:
+        colors.append((randint(64, 255), randint(64, 255), randint(64, 255)))
+      
+  
+      # Create MultiTracker object
+      multiTracker = cv2.MultiTracker_create()
+
+      # Initialize MultiTracker 
+      for bbox in bboxes:
+        multiTracker.add(cv2.TrackerKCF_create(), frame, bbox)
+                  
+      boxes=[]
+      resultBoxes=[]
+      for frame in pil_imgs:
+        
+        #
+        frame = cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+        
+        # get updated location of objects in subsequent frames
+        success, boxes = multiTracker.update(frame)  
+        
+        resultBoxes.append(boxes.tolist())
+        
+        # # draw tracked objects
+        # for i, newbox in enumerate(boxes):
+           # p1 = (int(newbox[0]), int(newbox[1]))
+           # p2 = (int(newbox[0] + newbox[2]), int(newbox[1] + newbox[3]))
+           # cv2.rectangle(frame, p1, p2, colors[i], 2, 1)
+
+        # #show frame
+        # cv2.imshow('MultiTracker', frame)  
+      vehiclesCoords = []
+      
+      for i, bbox in enumerate(boxes):
+        startBox = self.bboxes[i];
+        startX = startBox[0] + startBox[2]/2
+        startY = startBox[1] + startBox[3]/2
+        endX = bbox[0] + bbox[2]/2
+        endY = bbox[1] + bbox[3]/2
+        vehiclesCoords.append([startX,startY,endX,endY])
+
+      return [self.bboxes,boxes.tolist(),vehiclesCoords] 
+    
+
