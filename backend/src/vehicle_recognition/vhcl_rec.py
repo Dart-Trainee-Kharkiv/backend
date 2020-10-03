@@ -95,28 +95,29 @@ class VehicleRecognition(object):
             return vehicles
         return None
     
-    def TrackVehicles(self, pil_imgs):
+    def TrackVehicle(self, pil_imgs, point):
  
       # Read first frame
       frame = cv2.cvtColor(np.array(self.pil_img), cv2.COLOR_RGB2BGR)
       
 
-      ## Select boxes
-      bboxes = []
-      colors = [] 
+      ## Select box
+      bbox = [] 
   
       bboxes = self.bboxes;
       
-      for bbox in bboxes:
-        colors.append((randint(64, 255), randint(64, 255), randint(64, 255)))
+      pointX = point[0]
+      pointY = point[1]
       
-  
-      # Create MultiTracker object
-      multiTracker = cv2.MultiTracker_create()
-
-      # Initialize MultiTracker 
-      for bbox in bboxes:
-        multiTracker.add(cv2.TrackerKCF_create(), frame, bbox)
+      for box in bboxes:
+        if (pointX > box[0] and pointX < box[0]+box[2] and pointY > box[1] and pointY < box[1]+box[3]):
+            bbox=box
+            break
+      
+      startBox = bbox
+      # Create Tracker object
+      tracker = cv2.TrackerCSRT_create()      
+      ok = tracker.init(frame, tuple(bbox))
                   
       boxes=[]
       resultBoxes=[]
@@ -126,9 +127,9 @@ class VehicleRecognition(object):
         frame = cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
         
         # get updated location of objects in subsequent frames
-        success, boxes = multiTracker.update(frame)  
+        success, bbox = tracker.update(frame)  
         
-        resultBoxes.append(boxes.tolist())
+        resultBoxes.append(box)
         
         # # draw tracked objects
         # for i, newbox in enumerate(boxes):
@@ -140,14 +141,13 @@ class VehicleRecognition(object):
         # cv2.imshow('MultiTracker', frame)  
       vehiclesCoords = []
       
-      for i, bbox in enumerate(boxes):
-        startBox = self.bboxes[i];
-        startX = startBox[0] + startBox[2]/2
-        startY = startBox[1] + startBox[3]/2
-        endX = bbox[0] + bbox[2]/2
-        endY = bbox[1] + bbox[3]/2
-        vehiclesCoords.append([startX,startY,endX,endY])
 
-      return [self.bboxes,boxes.tolist(),vehiclesCoords] 
+      startX = startBox[0] + startBox[2]/2
+      startY = startBox[1] + startBox[3]/2
+      endX = bbox[0] + bbox[2]/2
+      endY = bbox[1] + bbox[3]/2
+      vehiclesCoords.append([startX,startY,endX,endY])
+
+      return [[startBox],[bbox],vehiclesCoords] 
     
 

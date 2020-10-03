@@ -11,11 +11,7 @@ marshmallow = "*"
 pillow = "*"
 numpy = "*"
 gunicorn = "*"
-<<<<<<< HEAD
-opencv-python-headless = "*"
-=======
 opencv-contrib-python = "*"
->>>>>>> marko
 
 [requires]
 python_version = "3.8"
