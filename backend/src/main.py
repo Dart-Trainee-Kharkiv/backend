@@ -4,12 +4,14 @@ import io
 import json
 import base64
 import codecs
-#our vehicle recognition mode
 
+#our vehicle recognition mode
 from vehicle_recognition.vhcl_rec import VehicleRecognition
 
 #creating the Flask application
 app = Flask(__name__)
+
+vrs = {}
 
 @app.route('/img', methods=['POST'])
 def post_img():
@@ -27,10 +29,18 @@ def post_img():
 
     #detecting vehicles on the img
     vr = VehicleRecognition(pil_img)
+    
+    #hash object
+    hash_vr = hash(vr)
+    
+    #add to dict 
+    vrs[hash_vr] =vr
+    
+    # detecting vehicles
     vehicles = vr.DetectVehicles()
 
     #return array with vehicles
-    return jsonify(vehicles=vehicles), 201
+    return jsonify(vehicles=vehicles, hash=hash_vr), 201
     
 
 #http post request for /tracking
@@ -39,65 +49,44 @@ def post_frame():
 
     #mount image object
     j = request.get_json()
-    frames = j['frames']
-    point = j['point']
+
+    frame = j['frame']
+    hash_vr = j['hash']
 
     #encoding json into bytes
-    s_bytes = []
-    for frame in frames:
-      s_bytes.append(frame.encode())
+    s_bytes = frame.encode()
 
     #show transfered image
-    pil_imgs = []
-    for bytes in s_bytes:
-      f = io.BytesIO(base64.b64decode(bytes))
-      pil_imgs.append(Image.open(f).convert('RGB'))
+    f = io.BytesIO(base64.b64decode(s_bytes))
+    pil_img = Image.open(f).convert('RGB')
       
-    #detecting vehicles on the img
-    vr = VehicleRecognition(pil_imgs[0])
-    vr.DetectVehicles()
-    result = vr.TrackVehicle(pil_imgs, point)
+    #vr = VehicleRecognition(pil_imgs[0])
+    vr = vrs[hash_vr]
     
-    #print(result)
-    startBoxes = result[0]
-    finishBoxes = result[1]
-    coords = result[2]
-    #return array with vehicles
-    print(result)
-    return jsonify(startBoxes=startBoxes,finishBoxes=finishBoxes,coords=coords), 201
-
+    vr.AddImage(pil_img)
     
+    return jsonify(0),201
 
-#http post request for /multitracking
-@app.route('/multitracking', methods=['POST'])
-def post_frames():
+@app.route('/result', methods=['POST'])
+def get_result():
 
-    #mount image object
-    j = request.get_json()
-    frames = j['frames']
+   #mount image object
+   j = request.get_json()
+   hash_vr = j['hash']
+   point = j['point']
+   
+   vr = vrs[hash_vr]
+   vrs.pop(hash_vr)
 
-    #encoding json into bytes
-    s_bytes = []
-    for frame in frames:
-      s_bytes.append(frame.encode())
-
-    #show transfered image
-    pil_imgs = []
-    for bytes in s_bytes:
-      f = io.BytesIO(base64.b64decode(bytes))
-      pil_imgs.append(Image.open(f).convert('RGB'))
-      
-    #detecting vehicles on the img
-    vr = VehicleRecognition(pil_imgs[0])
-    vr.DetectVehicles()
-    result = vr.TrackVehicles(pil_imgs)
-    
-    #print(result)
-    startBoxes = result[0]
-    finishBoxes = result[1]
-    coords = result[2]
-    #return array with vehicles
-    return jsonify(startBoxes=startBoxes,finishBoxes=finishBoxes,coords=coords), 201
+   result = vr.TrackVehicle(point)
+   
+   startBoxes = result[0]
+   finishBoxes = result[1]
+   coords = result[2]
+   
+   #return array with vehicles
+   return jsonify(startBoxes=startBoxes,finishBoxes=finishBoxes,coords=coords), 201
+         
 
 if __name__ == '__main__':
     app.run(debug=True)

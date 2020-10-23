@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import cv2
 import random
-import os
+#import osа
 import json
 from random import randint
 
@@ -19,6 +19,9 @@ class VehicleRecognition(object):
 
         #image that will be analyzed
         self.pil_img = pil_img
+        
+        #images that represent video
+        self.pil_imgs = []        
         
         #bound boxes
         self.bboxes = None 
@@ -95,8 +98,14 @@ class VehicleRecognition(object):
             return vehicles
         return None
     
-    def TrackVehicle(self, pil_imgs, point):
+    def AddImage(self, pil_img):
+       self.pil_imgs.append(pil_img)
+       return
+    
+    
+    def TrackVehicle(self, point):
  
+      pil_imgs = self.pil_imgs
       # Read first frame
       frame = cv2.cvtColor(np.array(self.pil_img), cv2.COLOR_RGB2BGR)
       
